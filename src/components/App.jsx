@@ -1,5 +1,5 @@
 import { GlobalStyle } from './GlobalStyle';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ErrorMsg, Layout } from './Layout';
 
 import { Searchbar } from './Searchbar/Searchbar';
