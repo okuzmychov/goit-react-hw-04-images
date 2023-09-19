@@ -1,9 +1,10 @@
+import React from 'react';
 import { GalleryItem, GalleryImage } from './ImageGalleryItem.styled';
 
-export const ImageGalleryItem = ({ url, tags, onClick }) => {
+export const ImageGalleryItem = ({ image, openModal }) => {
   return (
-    <GalleryItem>
-      <GalleryImage src={url} alt={tags} onClick={onClick} />
+    <GalleryItem key={image.id} onClick={() => openModal(image)}>
+      <GalleryImage src={image.webformatURL} alt={image.tags} />
     </GalleryItem>
   );
 };

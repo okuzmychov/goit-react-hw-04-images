@@ -1,127 +1,92 @@
-import { GlobalStyle } from './GlobalStyle';
-import React, { useEffect, useState } from 'react';
-import { ErrorMsg, Layout } from './Layout';
-
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { Container } from './App.styled';
 import { Searchbar } from './Searchbar/Searchbar';
 import { Loader } from './Loader/Loader';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
-import { serviceGetImages } from 'api';
-import { EndGallery } from './EndGallery/EndGallery';
-import { Modal } from './Modal/Modal';
+import * as Request from 'api';
+import { ScrollToTop } from './ScrollToTop/ScrollToTop';
+import { ModalStyled } from './Modal/Modal';
 
 export const App = () => {
-  const [gallery, setGallery] = useState([]);
-  const [query, setQuery] = useState({
-    searchString: '',
-    page: 1,
-    perPage: 12,
-    totalHits: 0,
-    timeStamp: null,
-  });
-
-  const [loader, setLoader] = useState(false);
-  const [error, setError] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedImage, SetSelectedImage] = useState('');
+  const [searchValues, setSearchValues] = useState('');
+  const [imageSrc, setImageSrc] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModal, setIsModal] = useState(false);
 
   useEffect(() => {
-    if (query.timeStamp === null) return;
-    async function getImages() {
+    if (searchValues === '') {
+      return;
+    }
+
+    async function addImages() {
       try {
-        setLoader(true);
-        setError(false);
-        const responce = await serviceGetImages(query);
-        setGallery(prevImg => [...prevImg, ...responce.hits]);
-        setQuery(prevQuery => ({
-          ...prevQuery,
-          totalHits: responce.totalHits,
-        }));
+        setIsLoading(true);
+        setIsError(false);
+        const data = await Request.fetchGallery(searchValues, page);
+
+        if (data.hits.length === 0) {
+          toast.error('Спробуйте змінити запит!');
+          return;
+        }
+
+        const normalImages = Request.destImages(data.hits);
+        setImages(propImages => [...propImages, ...normalImages]);
+        setTotalPages(Math.ceil(data.totalHits / 12));
       } catch (error) {
-        setError(true);
+        setIsError(true);
+        toast.error('Вибачте, щось пішло не так.');
       } finally {
-        setLoader(false);
+        setIsLoading(false);
       }
     }
-    getImages()
-  }, [query]);
+    addImages();
+  }, [searchValues, page]);
 
-  useEffect(() => scrollUp, [query.page]);
-
-  const handleChange = ev => {
-    setQuery(prevQuery => ({ ...prevQuery, searchString: ev.target.value }));
+  const changeValue = query => {
+    setSearchValues(query);
+    setImages([]);
+    setPage(1);
   };
 
-  const handleSubmit = ev => {
-    ev.preventDefault();
-    setQuery(prevQuery => ({
-      ...prevQuery,
-      searchString: ev.target.search.value,
-      page: 1,
-      timeStamp: Date.now(),
-    }));
-    setGallery([]);
+  const loadMoreImages = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  const handleLoadMore = () => {
-    setQuery(prevQuery => ({ ...prevQuery, page: prevQuery.page + 1 }));
-  };
-
-  function scrollUp() {
-    const height = (window.innerHeight - 128) / 18;
-    function scr() {
-      window.scrollBy(0, height);
-    }
-    for (let i = 1; i < 19; i++) {
-      const delay = i * 50;
-      setTimeout(scr, delay);
-    }
-  }
-
-  const openModal = largeImageURL => {
-    setShowModal(true);
-    SetSelectedImage(largeImageURL);
+  const openModal = image => {
+    setImageSrc(image);
+    setIsModal(true);
   };
 
   const closeModal = () => {
-    setShowModal(false);
-    SetSelectedImage('');
+    setImageSrc('');
+    setIsModal(false);
   };
 
-  const { searchString, page, perPage, totalHits, timeStamp } = query;
-  const showGallery = gallery.length > 0;
-  const showEndGallery = totalHits / perPage < page;
-  const showBtnMore = !showEndGallery && showGallery;
-  const showError = error && !showEndGallery;
-
   return (
-    <Layout>
-      <Searchbar
-        search={searchString}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
+    <Container>
+      <Searchbar onSubmit={changeValue} />
+      {isLoading && <Loader />}
+      {isError &&
+        !isLoading &&
+        toast.error('Вибачте, але за Вашим запитом нічого не знайдено.')}
+      {images.length > 0 && (
+        <ImageGallery images={images} openModal={openModal} />
+      )}
+      {images.length > 0 && totalPages !== page && !isLoading && (
+        <Button onClick={loadMoreImages} />
+      )}
+      {images.length > 36 && !isLoading && <ScrollToTop />}
+      <ModalStyled
+        isOpen={isModal}
+        onRequestClose={closeModal}
+        image={imageSrc}
       />
-      {showGallery && (
-        <ImageGallery gallery={gallery} onClick={openModal} />
-      )}
-      {loader && <Loader />}
-      {showBtnMore && <Button onClick={handleLoadMore}>Завантажити ще</Button>}
-      {showEndGallery && !!totalHits && <EndGallery />}
-      {!loader && !showGallery && !!timeStamp && (
-        <ErrorMsg>
-          Вибачте, але за Вашим запитом нічого не знайдено. Спробуйте змінити
-          запит.
-        </ErrorMsg>
-      )}
-      {showError && (
-        <ErrorMsg>
-          Вибачте, щось пішло не так. Спробуйте перезавантажити сторінку.
-        </ErrorMsg>
-      )}
-      {showModal && (
-        <Modal largeImageURL={selectedImage} onClose={closeModal} />
-      )}
-      <GlobalStyle />
-    </Layout>
+    </Container>
   );
 };

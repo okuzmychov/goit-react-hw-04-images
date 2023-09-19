@@ -1,34 +1,12 @@
-import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { BackDrop, Content } from './Modal.styled';
+import Modal from 'react-modal';
+import { customStyles } from './Modal.styled';
 
-export const Modal = ({ onClose, largeImageURL }) => {
-  useEffect(() => {
-    const handleKeyDown = e => {
-      if (e.code === 'Escape') {
-        onClose();
-      }
-    };
+Modal.setAppElement('#root');
 
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose]);
-
-  const handleBackdropClick = e => {
-    if (e.currentTarget === e.target) {
-      onClose();
-    }
-  };
-
-  return createPortal(
-    <BackDrop onClick={handleBackdropClick}>
-      <Content>
-      <img src={largeImageURL} alt="Large" />
-      </Content>
-    </BackDrop>,
-    // modalRoot
+export const ModalStyled = ({ isOpen, onRequestClose, image }) => {
+ return (
+    <Modal style={customStyles} isOpen={isOpen} onRequestClose={onRequestClose}>
+      <img src={image.largeImageURL} alt={image.tags} />
+    </Modal>
   );
 };
