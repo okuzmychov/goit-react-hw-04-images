@@ -23,7 +23,7 @@ export const App = () => {
   const [loader, setLoader] = useState(false);
   const [error, setError] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [bigImgUrl, setBigImgUrl] = useState('');
+  const [selectedImage, SetSelectedImage] = useState('');
 
   useEffect(() => {
     if (query.timeStamp === null) return;
@@ -78,13 +78,14 @@ export const App = () => {
     }
   }
 
-  const toggleModal = () => {
-    setShowModal(prevModal => !prevModal);
+  const openModal = largeImageURL => {
+    setShowModal(true);
+    SetSelectedImage(largeImageURL);
   };
 
-  const handleImgClick = bigImgUrl => {
-    setBigImgUrl(bigImgUrl);
-    setShowModal(true);
+  const closeModal = () => {
+    setShowModal(false);
+    SetSelectedImage('');
   };
 
   const { searchString, page, perPage, totalHits, timeStamp } = query;
@@ -101,7 +102,7 @@ export const App = () => {
         onSubmit={handleSubmit}
       />
       {showGallery && (
-        <ImageGallery gallery={gallery} onClick={handleImgClick} />
+        <ImageGallery gallery={gallery} onClick={openModal} />
       )}
       {loader && <Loader />}
       {showBtnMore && <Button onClick={handleLoadMore} />}
@@ -118,9 +119,7 @@ export const App = () => {
         </ErrorMsg>
       )}
       {showModal && (
-        <Modal onClose={toggleModal}>
-          <img src={bigImgUrl} alt="zoomed" />
-        </Modal>
+        <Modal largeImageURL={selectedImage} onClose={closeModal} />
       )}
       <GlobalStyle />
     </Layout>

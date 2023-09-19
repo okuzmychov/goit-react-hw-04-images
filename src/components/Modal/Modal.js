@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { BackDrop, CloseBtn, Content, Icon } from './Modal.styled';
+import { BackDrop, Content } from './Modal.styled';
 
-export const Modal = ({ onClose, children }) => {
+export const Modal = ({ onClose, largeImageURL }) => {
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.code === 'Escape') {
@@ -15,10 +15,10 @@ export const Modal = ({ onClose, children }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onClose]);
 
-  const handleBackdropClick = event => {
-    if (event.currentTarget === event.target) {
+  const handleBackdropClick = e => {
+    if (e.currentTarget === e.target) {
       onClose();
     }
   };
@@ -26,12 +26,9 @@ export const Modal = ({ onClose, children }) => {
   return createPortal(
     <BackDrop onClick={handleBackdropClick}>
       <Content>
-        <CloseBtn type="button" onClick={onClose}>
-          <Icon />
-        </CloseBtn>
-        {children}
+      <img src={largeImageURL} alt="Large" />
       </Content>
     </BackDrop>,
-    modalRoot
+    // modalRoot
   );
 };
