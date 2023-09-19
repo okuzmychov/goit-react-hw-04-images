@@ -44,7 +44,7 @@ export const App = () => {
       }
     }
     getImages();
-  }, [query.timeStamp, query.page, query.searchString, query.perPage]);
+  }, [query.timeStamp, query.page, query]);
 
   useEffect(() => scrollUp, [query.page]);
 
