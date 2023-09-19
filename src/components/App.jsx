@@ -43,7 +43,7 @@ export const App = () => {
         setLoader(false);
       }
     }
-  }, [query, page]);
+  }, [query.timeStamp, query, page]);
 
   useEffect(() => scrollUp, [query.page]);
 
