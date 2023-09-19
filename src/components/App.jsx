@@ -10,7 +10,7 @@ import { serviceGetImages } from 'api';
 import { EndGallery } from './EndGallery/EndGallery';
 import { Modal } from './Modal/Modal';
 
-export const App =()=> {
+export const App = () => {
   const [gallery, setGallery] = useState([]);
   const [query, setQuery] = useState({
     searchString: '',
@@ -20,90 +20,109 @@ export const App =()=> {
     timeStamp: null,
   });
 
-    const [loader, setLoader] = useState(false);
-    const [error, setError] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [bigImgUrl, setBigImgUrl] = useState('');
-  };
+  const [loader, setLoader] = useState(false);
+  const [error, setError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [bigImgUrl, setBigImgUrl] = useState('');
 
-   useEffect(() => {
-    if (query.timeStamp === null) return
-    async function getImages(){
+  useEffect(() => {
+    if (query.timeStamp === null) return;
+    async function getImages() {
       try {
         setLoader(true);
         setError(false);
         const responce = await serviceGetImages(query);
-        setGallery(prevImg=>([...prevImg, ...responce.hits]));
-        setQuery(prevQuery=>({...prevQuery, totalHits: responce.totalHits}));
+        setGallery(prevImg => [...prevImg, ...responce.hits]);
+        setQuery(prevQuery => ({
+          ...prevQuery,
+          totalHits: responce.totalHits,
+        }));
       } catch (error) {
         setError(true);
       } finally {
         setLoader(false);
       }
     }
-    getImages()
+    getImages();
   }, [query.timeStamp, query.page]);
 
+  useEffect(() => scrollUp, [query.page]);
 
-  useEffect(()=>scrollUp, [ query.page]);
-
-  const handleChange = (ev) => {
-    setQuery(prevQuery=>({...prevQuery, searchString: ev.target.value}));
+  const handleChange = ev => {
+    setQuery(prevQuery => ({ ...prevQuery, searchString: ev.target.value }));
   };
-  
-const handleSubmit = (ev) => {
-  ev.preventDefault();
-  setQuery(prevQuery => ({
-    ...prevQuery,
-    searchString: ev.target.search.value,
-    page: 1,
-    timeStamp: Date.now(),
-  }));
-  setGallery([]);
-};
 
+  const handleSubmit = ev => {
+    ev.preventDefault();
+    setQuery(prevQuery => ({
+      ...prevQuery,
+      searchString: ev.target.search.value,
+      page: 1,
+      timeStamp: Date.now(),
+    }));
+    setGallery([]);
+  };
 
-  const handleLoadMore = () =>{
-    setQuery(prevQuery=>({...prevQuery, page: prevQuery.page + 1}));
-}
-  
-  function scrollUp(){
+  const handleLoadMore = () => {
+    setQuery(prevQuery => ({ ...prevQuery, page: prevQuery.page + 1 }));
+  };
+
+  function scrollUp() {
     const height = (window.innerHeight - 128) / 18;
-    function scr(){
-      window.scrollBy(0, height)
+    function scr() {
+      window.scrollBy(0, height);
     }
     for (let i = 1; i < 19; i++) {
-      const delay = i*50;
+      const delay = i * 50;
       setTimeout(scr, delay);
     }
   }
 
   const toggleModal = () => {
-    setShowModal(prevModal=>(!prevModal));
+    setShowModal(prevModal => !prevModal);
   };
 
-  const handleImgClick = (bigImgUrl) =>{
+  const handleImgClick = bigImgUrl => {
     setBigImgUrl(bigImgUrl);
     setShowModal(true);
-  }
+  };
 
-    const {searchString, page, perPage, totalHits, timeStamp} = query;
-    const showGallery = (gallery.length>0);
-    const showEndGallery = ((totalHits / perPage) < page);
-    const showBtnMore = !showEndGallery && showGallery;
-    const showError = error && !showEndGallery;
+  const { searchString, page, perPage, totalHits, timeStamp } = query;
+  const showGallery = gallery.length > 0;
+  const showEndGallery = totalHits / perPage < page;
+  const showBtnMore = !showEndGallery && showGallery;
+  const showError = error && !showEndGallery;
 
-return (
-  <Layout>
-    <Searchbar search={searchString} onChange={handleChange} onSubmit={handleSubmit} />
-    {showGallery && <ImageGallery gallery={gallery} onClick={handleImgClick} />}
-    {loader && <Loader />}
-    {showBtnMore && <Button onClick={handleLoadMore} />}
-    {showEndGallery && !!totalHits && <EndGallery />}
-    {!loader && !showGallery && !!timeStamp && <ErrorMsg>Вибачте, але за Вашим запитом нічого не знайдено. Спробуйте змінити запит.</ErrorMsg>}
-    {showError && <ErrorMsg>Вибачте, щось пішло не так. Спробуйте перезавантажити сторінку.</ErrorMsg>}
-    {showModal && <Modal onClose={toggleModal} ><img src={bigImgUrl} alt='zoomed' /></Modal>}
-    <GlobalStyle />
-  </Layout>
-);
+  return (
+    <Layout>
+      <Searchbar
+        search={searchString}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+      />
+      {showGallery && (
+        <ImageGallery gallery={gallery} onClick={handleImgClick} />
+      )}
+      {loader && <Loader />}
+      {showBtnMore && <Button onClick={handleLoadMore} />}
+      {showEndGallery && !!totalHits && <EndGallery />}
+      {!loader && !showGallery && !!timeStamp && (
+        <ErrorMsg>
+          Вибачте, але за Вашим запитом нічого не знайдено. Спробуйте змінити
+          запит.
+        </ErrorMsg>
+      )}
+      {showError && (
+        <ErrorMsg>
+          Вибачте, щось пішло не так. Спробуйте перезавантажити сторінку.
+        </ErrorMsg>
+      )}
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <img src={bigImgUrl} alt="zoomed" />
+        </Modal>
+      )}
+      <GlobalStyle />
+    </Layout>
+  );
 };
