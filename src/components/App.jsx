@@ -42,9 +42,7 @@ export const App = () => {
       } finally {
         setLoader(false);
       }
-    }
-    getImages();
-  }, [query.timeStamp, query.page, query]);
+  }, [page, query]);
 
   useEffect(() => scrollUp, [query.page]);
 
