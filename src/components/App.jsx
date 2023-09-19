@@ -44,7 +44,7 @@ export const App = () => {
       }
     }
     getImages()
-  }, [query.timeStamp, query.page]);
+  }, [query]);
 
   useEffect(() => scrollUp, [query.page]);
 
@@ -105,7 +105,7 @@ export const App = () => {
         <ImageGallery gallery={gallery} onClick={openModal} />
       )}
       {loader && <Loader />}
-      {showBtnMore && <Button onClick={handleLoadMore} />}
+      {showBtnMore && <Button onClick={handleLoadMore}>Завантажити ще</Button>}
       {showEndGallery && !!totalHits && <EndGallery />}
       {!loader && !showGallery && !!timeStamp && (
         <ErrorMsg>
