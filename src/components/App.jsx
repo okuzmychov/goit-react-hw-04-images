@@ -31,7 +31,7 @@ export const App = () => {
       try {
         setLoader(true);
         setError(false);
-        const responce = await serviceGetImages(query);
+        const responce = await serviceGetImages(query, page);
         setGallery(prevImg => [...prevImg, ...responce.hits]);
         setQuery(prevQuery => ({
           ...prevQuery,
@@ -43,7 +43,7 @@ export const App = () => {
         setLoader(false);
       }
     }
-  }, [page, query]);
+  }, [query, page]);
 
   useEffect(() => scrollUp, [query.page]);
 
