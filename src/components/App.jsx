@@ -1,5 +1,5 @@
 import { GlobalStyle } from './GlobalStyle';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { ErrorMsg, Layout } from './Layout';
 
 import { Searchbar } from './Searchbar/Searchbar';
@@ -10,129 +10,100 @@ import { serviceGetImages } from 'api';
 import { EndGallery } from './EndGallery/EndGallery';
 import { Modal } from './Modal/Modal';
 
-export class App extends Component {
-  state = {
-    gallery: [],
-    query: {
-      searchString: '',
-      page: 1,
-      perPage: 12,
-      totalHits: 0,
-      timeStamp: null,
-    },
-    loader: false,
-    error: false,
-    showModal: false,
-    selectedImage: '',
+export const App =()=> {
+  const [gallery, setGallery] = useState([]);
+  const [query, setQuery] = useState({
+    searchString: '',
+    page: 1,
+    perPage: 12,
+    totalHits: 0,
+    timeStamp: null,
+  });
+
+    const [loader, setLoader] = useState(false);
+    const [error, setError] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [bigImgUrl, setBigImgUrl] = useState('');
   };
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query.timeStamp !== this.state.query.timeStamp ||
-      prevState.query.page !== this.state.query.page
-    ) {
+   useEffect(() => {
+    if (query.timeStamp === null) return
+    async function getImages(){
       try {
-        this.setState({ loader: true, error: false });
-        const responce = await serviceGetImages(this.state.query);
-        this.setState(prevState => ({
-          gallery: [...prevState.gallery, ...responce.hits],
-          query: { ...prevState.query, totalHits: responce.totalHits },
-        }));
+        setLoader(true);
+        setError(false);
+        const responce = await serviceGetImages(query);
+        setGallery(prevImg=>([...prevImg, ...responce.hits]));
+        setQuery(prevQuery=>({...prevQuery, totalHits: responce.totalHits}));
       } catch (error) {
-        this.setState({ error: true });
+        setError(true);
       } finally {
-        this.setState({ loader: false });
+        setLoader(false);
       }
     }
-    if (
-      prevState.gallery !== this.state.gallery &&
-      this.state.query.page !== 1
-    ) {
-      this.scrollUp();
-    }
-  }
+    getImages()
+  }, [query.timeStamp, query.page]);
 
-  handleChange = ev => {
-    this.setState(prevState => ({
-      query: { ...prevState.query, searchString: ev.target.value },
-    }));
+
+  useEffect(()=>scrollUp, [ query.page]);
+
+  const handleChange = (ev) => {
+    setQuery(prevQuery=>({...prevQuery, searchString: ev.target.value}));
   };
+  
+const handleSubmit = (ev) => {
+  ev.preventDefault();
+  setQuery(prevQuery => ({
+    ...prevQuery,
+    searchString: ev.target.search.value,
+    page: 1,
+    timeStamp: Date.now(),
+  }));
+  setGallery([]);
+};
 
-  handleSubmit = ev => {
-    ev.preventDefault();
-    this.setState(prevState => ({
-      query: {
-        ...prevState.query,
-        searchString: ev.target.search.value,
-        page: 1,
-        timeStamp: Date.now(),
-      },
-      gallery: [],
-    }));
-  };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      query: { ...prevState.query, page: prevState.query.page + 1 },
-    }));
-  };
-
-  scrollUp() {
+  const handleLoadMore = () =>{
+    setQuery(prevQuery=>({...prevQuery, page: prevQuery.page + 1}));
+}
+  
+  function scrollUp(){
     const height = (window.innerHeight - 128) / 18;
-    function scr() {
-      window.scrollBy(0, height);
+    function scr(){
+      window.scrollBy(0, height)
     }
     for (let i = 1; i < 19; i++) {
-      const delay = i * 50;
+      const delay = i*50;
       setTimeout(scr, delay);
     }
   }
 
-  openModal = largeImageURL => {
-    this.setState({ showModal: true, selectedImage: largeImageURL });
+  const toggleModal = () => {
+    setShowModal(prevModal=>(!prevModal));
   };
 
-  closeModal = () => {
-    this.setState({ showModal: false, selectedImage: '' });
-  };
+  const handleImgClick = (bigImgUrl) =>{
+    setBigImgUrl(bigImgUrl);
+    setShowModal(true);
+  }
 
-  render() {
-    const { gallery, loader, error, showModal, selectedImage,
-    query: { searchString, perPage, page, totalHits, timeStamp }, } = this.state;
-    const showGallery = (gallery.length > 0);
+    const {searchString, page, perPage, totalHits, timeStamp} = query;
+    const showGallery = (gallery.length>0);
     const showEndGallery = ((totalHits / perPage) < page);
     const showBtnMore = !showEndGallery && showGallery;
     const showError = error && !showEndGallery;
 
-    return (
-      <Layout>
-        <Searchbar
-          search={searchString}
-          onChange={this.handleChange}
-          onSubmit={this.handleSubmit}
-        />
-        {showGallery && (
-          <ImageGallery gallery={gallery} onImageClick={this.openModal} />
-        )}
-        {loader && <Loader />}
-        {showBtnMore && <Button onClick={this.handleLoadMore} />}
-        {showEndGallery && !!totalHits && <EndGallery />}
-        {!loader && !showGallery && !!timeStamp && (
-          <ErrorMsg>
-            Вибачте, але за вашим запитом нічого не знайдено. Спробуйте змінити
-            запит.
-          </ErrorMsg>
-        )}
-        {showError && (
-          <ErrorMsg>
-            Вибачте, щось пішло не так. Спробуйте перезавантажити сторінку.
-          </ErrorMsg>
-        )}
-        {showModal && (
-          <Modal largeImageURL={selectedImage} onClose={this.closeModal} isOpen={showModal}/>
-        )}
-        <GlobalStyle />
-      </Layout>
-    );
-  }
-}
+return (
+  <Layout>
+    <Searchbar search={searchString} onChange={handleChange} onSubmit={handleSubmit} />
+    {showGallery && <ImageGallery gallery={gallery} onClick={handleImgClick} />}
+    {loader && <Loader />}
+    {showBtnMore && <Button onClick={handleLoadMore} />}
+    {showEndGallery && !!totalHits && <EndGallery />}
+    {!loader && !showGallery && !!timeStamp && <ErrorMsg>Вибачте, але за Вашим запитом нічого не знайдено. Спробуйте змінити запит.</ErrorMsg>}
+    {showError && <ErrorMsg>Вибачте, щось пішло не так. Спробуйте перезавантажити сторінку.</ErrorMsg>}
+    {showModal && <Modal onClose={toggleModal} ><img src={bigImgUrl} alt='zoomed' /></Modal>}
+    <GlobalStyle />
+  </Layout>
+);
+};
