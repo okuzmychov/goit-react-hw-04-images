@@ -1,36 +1,31 @@
-import React, { Component } from 'react';
-import { StyledModalOverlay, StyledModal } from './Modal.styled';
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { BackDrop, CloseBtn, Content, Icon } from './Modal.styled';
 
-export class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
+export class Modal = ({onClose, children}) => {
+  useEffect(() => {
+    const handleKeyDown = e => { if (e.code === 'Escape') { onClose() } };
+  
+    window.addEventListener('keydown', handleKeyDown);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, []);
 
-  handleKeyDown = e => {
-    if (e.code === 'Escape') {
-      this.props.onClose();
+ const handleBackdropClick = event => {
+    if (event.currentTarget === event.target) {
+      onClose();
     }
   };
 
-  handleBackdropClick = e => {
-    if (e.target === e.currentTarget) {
-      this.props.onClose();
-    }
-  };
-
-  render() {
-    const { largeImageURL } = this.props;
-
-    return (
-      <StyledModalOverlay onClick={this.handleBackdropClick}>
-        <StyledModal>
-          <img src={largeImageURL} alt="Large" />
-        </StyledModal>
-      </StyledModalOverlay>
+ return createPortal(
+      <BackDrop onClick={handleBackdropClick}>
+        <Content>
+          <CloseBtn type='button' onClick={onClose}><Icon/></CloseBtn>
+          {children}
+        </Content>
+      </BackDrop>,
+      modalRoot
     );
-  }
 }
