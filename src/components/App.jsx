@@ -42,6 +42,7 @@ export const App = () => {
       } finally {
         setLoader(false);
       }
+    }
   }, [page, query]);
 
   useEffect(() => scrollUp, [query.page]);
