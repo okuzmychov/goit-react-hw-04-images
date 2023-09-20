@@ -1,18 +1,18 @@
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import { Gallery } from './ImageGallery.styled';
 
-export const ImageGallery = ({ gallery, openModal }) => {
+export const ImageGallery = ({ images, openModal }) => {
   return (
     <Gallery>
-      {gallery.map(el => (
-        <ImageGalleryItem
-          key={el.id}
-          url={el.webformatURL}
-          tags={el.tags}
-          largeImageURL={el.largeImageURL}
-          openModal={() => openModal(el.largeImageURL)}
-        />
-      ))}
+       {images.map(image => {
+        return (
+          <ImageGalleryItem
+            key={image.id}
+            image={image}
+            openModal={openModal}
+          />
+        );
+      })}
     </Gallery>
   );
 };
