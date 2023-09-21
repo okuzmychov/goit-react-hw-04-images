@@ -48,10 +48,16 @@ export const App = () => {
     addImages();
   }, [searchValues, page]);
 
-  const changeValue = query => {
-    setSearchValues(query);
-    setImages([]);
-    setPage(1);
+  const changeValue = newValue => {
+    if (newValue !== searchValues) {
+      // const id = new Date();
+      // const searchValues = `${id}/${newQuery}`;
+
+      setSearchValues(newValue);
+      setImages([]);
+      setIsError(false);
+      setPage(1);
+    }
   };
 
   const loadMoreImages = () => {
